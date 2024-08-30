@@ -1,5 +1,5 @@
 const path = require('path');
-const { override, addWebpackAlias, overrideDevServer } = require('customize-cra');
+const { override, addWebpackAlias, overrideDevServer, addWebpackResolve } = require('customize-cra');
 
 const disableBrowserOpen = () => (config) => {
   config.open = false;
@@ -11,6 +11,11 @@ module.exports = {
     addWebpackAlias({
       '~': path.resolve(__dirname, 'src'),
       '~comp': path.resolve(__dirname, 'src/components'),
+    }),
+    addWebpackResolve({
+      fallback: {
+        "path": require.resolve("path-browserify"),
+      }
     })
   ),
   devServer: overrideDevServer(
