@@ -1,9 +1,22 @@
 const { app, BrowserWindow, screen, ipcMain, Notification } = require('electron');
-const { globalShortcut } = require('electron/main');
 const path = require('path');
+
+const { getFilesFromFS, getFileFromFS, getFSTree } = require('./mods/fsOperations');
 
 require('dotenv').config();
 
+
+const receiveActions = {
+  getFiles(directoryPath){
+    return getFilesFromFS(directoryPath);
+  },
+  getFile(filePath){
+    return getFileFromFS(filePath);
+  },
+  getDirectoryTree(path){
+    return getFSTree(path);
+  }
+}
 
 function createWindow() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
@@ -34,13 +47,12 @@ function createWindow() {
     mainWindow.close();
   });
 
-  globalShortcut.register('CommandOrControl+Alt+K', () => {
-    if(!mainWindow.webContents.isDevToolsOpened()){
-      mainWindow.webContents.openDevTools();
-    } else {
-      mainWindow.webContents.closeDevTools();
-    }
-  });
+  for(let action in receiveActions){
+    ipcMain.on(action, async (event, ...args) => {
+      const result = await receiveActions[action](...args);
+      event.reply('C-'+action, result);
+    });
+  }
 
   ipcMain.on('showNotification', (_e, title, description, delay) => {
 
